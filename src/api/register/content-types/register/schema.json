@@ -1,0 +1,32 @@
+{
+  "kind": "collectionType",
+  "collectionName": "registers",
+  "info": {
+    "singularName": "register",
+    "pluralName": "registers",
+    "displayName": "Register"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "Name": {
+      "type": "string",
+      "required": true
+    },
+    "Email": {
+      "type": "email",
+      "required": true
+    },
+    "MobileNumber": {
+      "type": "biginteger",
+      "required": true,
+      "max": "10"
+    },
+    "Password": {
+      "type": "password",
+      "required": true
+    }
+  }
+}
