@@ -460,11 +460,15 @@ export interface ApiRegisterRegister extends Struct.CollectionTypeSchema {
         string
       >;
     Name: Schema.Attribute.String & Schema.Attribute.Required;
+    Otp: Schema.Attribute.BigInteger;
+    OtpExpiryAt: Schema.Attribute.DateTime;
     Password: Schema.Attribute.Password & Schema.Attribute.Required;
     publishedAt: Schema.Attribute.DateTime;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    userVerify: Schema.Attribute.Enumeration<['Verified', 'notVerified']> &
+      Schema.Attribute.Required;
   };
 }
 

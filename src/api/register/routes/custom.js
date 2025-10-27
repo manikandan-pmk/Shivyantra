@@ -24,5 +24,18 @@ export default {
       handler: "custom.update",
       config: { auth: false },
     },
+    {
+      method : "POST",
+      path : "/register/otp-verify",
+      handler:"custom.verifyOtp",
+      config : {auth : false}
+    },
+    {
+      method : "POST",
+      path : "/register/resend-otp",
+      handler:"custom.resendOtp",
+      config : {auth : false}
+    },
+
   ],
 };

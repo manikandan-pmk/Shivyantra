@@ -27,6 +27,20 @@
     "Password": {
       "type": "password",
       "required": true
+    },
+    "userVerify": {
+      "type": "enumeration",
+      "required": true,
+      "enum": [
+        "Verified",
+        "notVerified"
+      ]
+    },
+    "Otp": {
+      "type": "biginteger"
+    },
+    "OtpExpiryAt": {
+      "type": "datetime"
     }
   }
 }
