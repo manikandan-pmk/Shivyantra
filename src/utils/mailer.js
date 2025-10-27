@@ -1,10 +1,10 @@
 // src/utils/mailer.js
-import nodemailer from "nodemailer";
+const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
   port: Number(process.env.EMAIL_PORT) || 587,
-  secure: false,
+  secure: false, // use true for port 465, false for others
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
@@ -14,7 +14,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-export const sendMail = async ({ to, subject, text, html }) => {
+const sendMail = async ({ to, subject, text, html }) => {
   try {
     await transporter.sendMail({
       from: `"Shivyantra" <${process.env.EMAIL_USER}>`,
@@ -29,3 +29,5 @@ export const sendMail = async ({ to, subject, text, html }) => {
     throw new Error("Failed to send email");
   }
 };
+
+module.exports = { sendMail };
