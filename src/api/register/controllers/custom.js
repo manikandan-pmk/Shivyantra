@@ -1,7 +1,5 @@
 import bcrypt from "bcryptjs";
-import twilio from "twilio";
-
-const client = twilio(process.env.TWILIO_ACCOUNT, process.env.TWILIO_TOKEN);
+import { sendMail } from "../../../utils/mailer.js";
 
 export default {
   async register(ctx) {
@@ -28,17 +26,12 @@ export default {
 
       const OtpExpiry = new Date(Date.now() + 5 * 60 * 1000);
 
-      try {
-        await client.messages.create({
-          from: "+15188401283",
-          to: MobileNumber,
-          subject: "Registeration Verification Code",
-          body: `Hello ${Name} , Your Code Is ${generateOTP} and Expire in 5 Mins,
-        `,
-        });
-      } catch (err) {
-        return ctx.badRequest(err.message);
-      }
+      await sendMail({
+        to: Email,
+        subject: "Your Verification Code",
+        text: `Hello ${Name}, your OTP code is ${generateOTP}. It expires in 5 minutes.`,
+        html: `<p>Hello <b>${Name}</b>,</p><p>Your OTP is <b>${generateOTP}</b>.</p><p>It expires in 5 minutes.</p>`,
+      });
 
       const user = await strapi.db.query("api::register.register").create({
         data: {
@@ -62,12 +55,12 @@ export default {
   },
   async verifyOtp(ctx) {
     try {
-      const { MobileNumber, Otp, OtpExpiryAt } = ctx.request.body;
+      const { Email, Otp, OtpExpiryAt } = ctx.request.body;
       if (!Otp) {
         return ctx.badRequest("Field is Required");
       }
       const user = await strapi.db.query("api::register.register").findOne({
-        where: { MobileNumber },
+        where: { Email },
       });
 
       if (!user) {
@@ -85,6 +78,7 @@ export default {
       if (new Date() > new Date(user.OtpExpiryAt)) {
         return ctx.badRequest("Otp is Expired");
       }
+
       const verifiedUser = await strapi.db
         .query("api::register.register")
         .update({
@@ -106,14 +100,14 @@ export default {
   },
   async resendOtp(ctx) {
     try {
-      const { MobileNumber } = ctx.request.body;
+      const { Email } = ctx.request.body;
 
-      if (!MobileNumber) {
+      if (!Email) {
         return ctx.badRequest("Mobile Number is Required");
       }
 
       const user = await strapi.db.query("api::register.register").findOne({
-        where: { MobileNumber },
+        where: { Email },
       });
 
       if (user.userVerify === "verified") {
@@ -123,12 +117,11 @@ export default {
       const generateOTP = Math.floor(10000 + Math.random() * 90000).toString();
       const otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
 
-      await client.messages.create({
-        from: "+15188401283",
-        to: MobileNumber,
-        subject: "Registeration Verification Code",
-        body: `Hello ${user.Name} , Your Re-Code Is ${generateOTP} and Expire in 5 Mins,
-        `,
+      await sendMail({
+        to: user.Email,
+        subject: "Your Verification Code",
+        text: `Hello ${user.Name}, your Re-OTP code is ${generateOTP}. It expires in 5 minutes.`,
+        html: `<p>Hello <b>${user.Name}</b>,</p><p>Your OTP is <b>${generateOTP}</b>.</p><p>It expires in 5 minutes.</p>`,
       });
 
       const updateUser = await strapi.db
@@ -146,7 +139,7 @@ export default {
         message: "New OTP sent successfully",
         data: {
           id: updateUser.id,
-          MobileNumber: updateUser.MobileNumber,
+          Email: updateUser.Email,
         },
       });
     } catch (err) {
