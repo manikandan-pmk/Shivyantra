@@ -1,5 +1,7 @@
 import bcrypt from "bcryptjs";
-import { sendMail } from "../../../utils/mailer.js";
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export default {
   async register(ctx) {
@@ -26,12 +28,24 @@ export default {
 
       const OtpExpiry = new Date(Date.now() + 5 * 60 * 1000);
 
-      await sendMail({
-        to: Email,
-        subject: "Your Verification Code",
-        text: `Hello ${Name}, your OTP code is ${generateOTP}. It expires in 5 minutes.`,
-        html: `<p>Hello <b>${Name}</b>,</p><p>Your OTP is <b>${generateOTP}</b>.</p><p>It expires in 5 minutes.</p>`,
-      });
+      try {
+        await resend.emails.send({
+          from: "Shivyantra <onboarding@resend.dev>",
+          to: Email,
+          subject: "Your OTP for Shivyantra Verification",
+          html: `
+            <div style="font-family:sans-serif; padding:10px">
+              <h2>Hi ${Name},</h2>
+              <p>Your OTP for verification is:</p>
+              <h1 style="color:#4CAF50;">${generateOTP}</h1>
+              <p>This OTP will expire in 5 minutes.</p>
+              <p>Thank you,<br/>Shivyantra Team</p>
+            </div>
+          `,
+        });
+      } catch (emailError) {
+        console.error("Error sending OTP email:", emailError);
+      }
 
       const user = await strapi.db.query("api::register.register").create({
         data: {
@@ -117,12 +131,24 @@ export default {
       const generateOTP = Math.floor(10000 + Math.random() * 90000).toString();
       const otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
 
-      await sendMail({
-        to: user.Email,
-        subject: "Your Verification Code",
-        text: `Hello ${user.Name}, your Re-OTP code is ${generateOTP}. It expires in 5 minutes.`,
-        html: `<p>Hello <b>${user.Name}</b>,</p><p>Your OTP is <b>${generateOTP}</b>.</p><p>It expires in 5 minutes.</p>`,
-      });
+      try {
+        await resend.emails.send({
+          from: "Shivyantra <onboarding@resend.dev>",
+          to: Email,
+          subject: "Your OTP for Shivyantra Verification",
+          html: `
+            <div style="font-family:sans-serif; padding:10px">
+              <h2>Hi ${user.Name},</h2>
+              <p>Your OTP for verification is:</p>
+              <h1 style="color:#4CAF50;">${generateOTP}</h1>
+              <p>This OTP will expire in 5 minutes.</p>
+              <p>Thank you,<br/>Shivyantra Team</p>
+            </div>
+          `,
+        });
+      } catch (emailError) {
+        console.error("Error sending OTP email:", emailError);
+      }
 
       const updateUser = await strapi.db
         .query("api::register.register")
