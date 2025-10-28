@@ -41,6 +41,12 @@ export default {
         path :"/login",
         handler : "custom.login",
         config : {auth : false}
+    },
+    {
+      method : "POST",
+      path : "/logout",
+      handler : "custom.logout",
+      config : {auth:false}
     }
 
   ],

@@ -51,6 +51,9 @@
     },
     "lastLoginAt": {
       "type": "datetime"
+    },
+    "lastLogoutIn": {
+      "type": "datetime"
     }
   }
 }

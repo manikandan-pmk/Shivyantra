@@ -168,7 +168,7 @@ export default {
         data: {
           id: updateUser.id,
           Email: updateUser.Email,
-          otpExpiryAt :otpExpiry
+          otpExpiryAt: otpExpiry,
         },
       });
     } catch (err) {
@@ -290,8 +290,6 @@ export default {
       return ctx.internalServerError(err.message);
     }
   },
-
-  // Login Contoller
   async login(ctx) {
     try {
       const { Email, Password } = ctx.request.body;
@@ -301,7 +299,7 @@ export default {
         return ctx.badRequest("All fields are required");
       }
 
-      // 2️⃣ Find user in register table
+      // 2️⃣ Find user
       const user = await strapi.db.query("api::register.register").findOne({
         where: { Email },
       });
@@ -310,26 +308,23 @@ export default {
         return ctx.badRequest("User not found. Please register first.");
       }
 
-      // 3️⃣ Check if user is verified
+      // 3️⃣ Check verification
       if (user.userVerify !== "verified") {
         return ctx.badRequest("User not verified. Please verify your email.");
       }
 
-      if (user.isLoginned === true) {
-        return ctx.badRequest("User Already Loginned");
+      // 4️⃣ Prevent duplicate login
+      if (user.isLoginned === true || user.refresh_token !== null) {
+        return ctx.badRequest("User already logged in.");
       }
 
-      // 4️⃣ Compare password
+      // 5️⃣ Verify password
       const isPasswordValid = await bcrypt.compare(Password, user.Password);
       if (!isPasswordValid) {
-        return ctx.badRequest("Invalid credentials");
+        return ctx.badRequest("Invalid credentials.");
       }
 
-      if (user.refresh_token !== null) {
-        return ctx.badRequest("User Already Loginned");
-      }
-
-      // 5️⃣ Create JWT
+      // 6️⃣ Create JWT token
       const token = jwt.sign(
         {
           id: user.id,
@@ -337,33 +332,75 @@ export default {
           name: user.Name,
         },
         process.env.JWT_SECRET,
-        { expiresIn: "7d" } // Token valid for 7 days
+        { expiresIn: "7d" } // valid for 7 days
       );
 
-      // 6️⃣ Optional: update last login time
+      // 7️⃣ Update user with token + login info
       await strapi.db.query("api::register.register").update({
         where: { id: user.id },
         data: {
-          lastLoginAt: new Date(),
+          lastLoginAt: new Date(Date.now()),
           refresh_token: token,
           isLoginned: true,
         },
       });
 
-      // 7️⃣ Remove sensitive data before sending
-      const { Password: _, ...safeUser } = user;
+      // 8️⃣ Fetch updated user
+      const updatedUser = await strapi.db
+        .query("api::register.register")
+        .findOne({
+          where: { id: user.id },
+        });
+
+      // 9️⃣ Remove password before returning
+      const { Password: _, ...safeUser } = updatedUser;
 
       return ctx.send({
         success: true,
         message: "Login successful",
         user: safeUser,
-        token,
       });
     } catch (err) {
       console.error("Login Error:", err);
-      return ctx.internalServerError(
-        err.message || "Something went wrong. Please try again."
-      );
+      return ctx.internalServerError(err.message || "Something went wrong.");
+    }
+  },
+
+  async logout(ctx) {
+    try {
+      const { id } = ctx.params;
+      const { refresh_token } = ctx.request.body;
+
+      const userSession = await strapi.db
+        .query("api::register.register")
+        .findOne({
+          where: { refresh_token },
+        });
+
+      if (!userSession) {
+        return ctx.badRequest("Token not found, please login again");
+      }
+
+      const date = new Date(Date.now());
+
+      const updateSession = await strapi.db
+        .query("api::register.register")
+        .update({
+          where: { id: userSession.id },
+          data: {
+            refresh_token: null,
+            isLoginned: false,
+            lastLogoutIn: date,
+          },
+        });
+
+      return ctx.send({
+        success: true,
+        message: `Logout successful for ${userSession.Email}`,
+        data: updateSession,
+      });
+    } catch (err) {
+      return ctx.internalServerError(err.message || err);
     }
   },
 };

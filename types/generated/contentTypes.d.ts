@@ -447,6 +447,7 @@ export interface ApiRegisterRegister extends Struct.CollectionTypeSchema {
     Email: Schema.Attribute.Email & Schema.Attribute.Required;
     isLoginned: Schema.Attribute.Boolean & Schema.Attribute.Required;
     lastLoginAt: Schema.Attribute.DateTime;
+    lastLogoutIn: Schema.Attribute.DateTime;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
