@@ -1,25 +1,25 @@
 module.exports = ({ env }) => ({
   auth: {
-    secret: env('ADMIN_JWT_SECRET'),
+    secret: env('ADMIN_JWT_SECRET', 'some-secret-key'),
+
     sessions: {
-      // New structure replacing 'options.expiresIn'
-      maxSessionLifespan: env('ADMIN_SESSION_LIFESPAN', '1h'),
-      maxRefreshTokenLifespan: env('ADMIN_REFRESH_TOKEN_LIFESPAN', '7d'),
+      maxSessionLifespan: env.int('ADMIN_SESSION_LIFESPAN', 60 * 60 * 1000),
+      maxRefreshTokenLifespan: env.int('ADMIN_REFRESH_TOKEN_LIFESPAN', 7 * 24 * 60 * 60 * 1000), 
     },
   },
 
   apiToken: {
-    salt: env('API_TOKEN_SALT'),
+    salt: env('API_TOKEN_SALT', 'default-salt'),
   },
 
   transfer: {
     token: {
-      salt: env('TRANSFER_TOKEN_SALT'),
+      salt: env('TRANSFER_TOKEN_SALT', 'transfer-salt'),
     },
   },
 
   secrets: {
-    encryptionKey: env('ENCRYPTION_KEY'),
+    encryptionKey: env('ENCRYPTION_KEY', 'encryption-key'),
   },
 
   flags: {
