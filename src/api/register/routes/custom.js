@@ -36,6 +36,12 @@ export default {
       handler:"custom.resendOtp",
       config : {auth : false}
     },
+    {
+        method : "POST",
+        path :"/login",
+        handler : "custom.login",
+        config : {auth : false}
+    }
 
   ],
 };

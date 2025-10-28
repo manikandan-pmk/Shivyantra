@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import { Resend } from "resend";
+import jwt from "jsonwebtoken";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -56,9 +57,9 @@ export default {
           Otp: generateOTP,
           userVerify: "notVerified",
           OtpExpiryAt: OtpExpiry,
+          isLoginned: false,
         },
       });
-      console.log(user);
       return ctx.send({
         success: true,
         data: user,
@@ -69,6 +70,7 @@ export default {
   },
   async verifyOtp(ctx) {
     try {
+      // @ts-ignore
       const { Email, Otp, OtpExpiryAt } = ctx.request.body;
       if (!Otp) {
         return ctx.badRequest("Field is Required");
@@ -141,7 +143,7 @@ export default {
               <h2>Hi ${user.Name},</h2>
               <p>Your OTP for verification is:</p>
               <h1 style="color:#4CAF50;">${generateOTP}</h1>
-              <p>This OTP will expire in 5 minutes.</p>
+              <p>This Re-OTP will expire in 5 minutes.</p>
               <p>Thank you,<br/>Shivyantra Team</p>
             </div>
           `,
@@ -156,7 +158,7 @@ export default {
           where: { id: user.id },
           data: {
             Otp: generateOTP,
-            otpExpiryAt: otpExpiry,
+            OtpExpiryAt: otpExpiry,
           },
         });
 
@@ -166,6 +168,7 @@ export default {
         data: {
           id: updateUser.id,
           Email: updateUser.Email,
+          otpExpiryAt :otpExpiry
         },
       });
     } catch (err) {
@@ -217,13 +220,20 @@ export default {
   async update(ctx) {
     try {
       const { id } = ctx.params;
-      const { Name, Email, MobileNumber, Password } = ctx.request.body;
+      const {
+        Name,
+        Email,
+        MobileNumber,
+        Password,
+        isLoginned,
+        refresh_token,
+        lastLoginAt,
+      } = ctx.request.body;
 
       if (!id) {
         return ctx.badRequest("User ID is required");
       }
 
-      // check if user exists
       const existingUser = await strapi.db
         .query("api::register.register")
         .findOne({ where: { id } });
@@ -232,23 +242,42 @@ export default {
         return ctx.badRequest("User Not Found");
       }
 
-      // hash password if provided
       let hashPassword = existingUser.Password;
       if (Password) {
         hashPassword = await bcrypt.hash(Password, 10);
       }
 
-      // update user
+      // Build dynamic update data
+      const updateData = {
+        ...(Name && { Name }),
+        ...(Email && { Email }),
+        ...(MobileNumber && { MobileNumber }),
+        Password: hashPassword,
+      };
+
+      // ✅ Update boolean correctly (even false)
+      if (typeof isLoginned === "boolean") {
+        // @ts-ignore
+        updateData.isLoginned = isLoginned;
+      }
+
+      // ✅ Handle refresh_token, including null
+      if (refresh_token !== undefined) {
+        // @ts-ignore
+        updateData.refresh_token = refresh_token;
+      }
+
+      // ✅ Optional lastLoginAt update
+      if (lastLoginAt) {
+        // @ts-ignore
+        updateData.lastLoginAt = lastLoginAt;
+      }
+
       const updatedUser = await strapi.db
         .query("api::register.register")
         .update({
           where: { id },
-          data: {
-            ...(Name && { Name }),
-            ...(Email && { Email }),
-            ...(MobileNumber && { MobileNumber }),
-            Password: hashPassword,
-          },
+          data: updateData,
         });
 
       return ctx.send({
@@ -259,6 +288,82 @@ export default {
     } catch (err) {
       console.error("Update error:", err);
       return ctx.internalServerError(err.message);
+    }
+  },
+
+  // Login Contoller
+  async login(ctx) {
+    try {
+      const { Email, Password } = ctx.request.body;
+
+      // 1️⃣ Basic validation
+      if (!Email || !Password) {
+        return ctx.badRequest("All fields are required");
+      }
+
+      // 2️⃣ Find user in register table
+      const user = await strapi.db.query("api::register.register").findOne({
+        where: { Email },
+      });
+
+      if (!user) {
+        return ctx.badRequest("User not found. Please register first.");
+      }
+
+      // 3️⃣ Check if user is verified
+      if (user.userVerify !== "verified") {
+        return ctx.badRequest("User not verified. Please verify your email.");
+      }
+
+      if (user.isLoginned === true) {
+        return ctx.badRequest("User Already Loginned");
+      }
+
+      // 4️⃣ Compare password
+      const isPasswordValid = await bcrypt.compare(Password, user.Password);
+      if (!isPasswordValid) {
+        return ctx.badRequest("Invalid credentials");
+      }
+
+      if (user.refresh_token !== null) {
+        return ctx.badRequest("User Already Loginned");
+      }
+
+      // 5️⃣ Create JWT
+      const token = jwt.sign(
+        {
+          id: user.id,
+          email: user.Email,
+          name: user.Name,
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: "7d" } // Token valid for 7 days
+      );
+
+      // 6️⃣ Optional: update last login time
+      await strapi.db.query("api::register.register").update({
+        where: { id: user.id },
+        data: {
+          lastLoginAt: new Date(),
+          refresh_token: token,
+          isLoginned: true,
+        },
+      });
+
+      // 7️⃣ Remove sensitive data before sending
+      const { Password: _, ...safeUser } = user;
+
+      return ctx.send({
+        success: true,
+        message: "Login successful",
+        user: safeUser,
+        token,
+      });
+    } catch (err) {
+      console.error("Login Error:", err);
+      return ctx.internalServerError(
+        err.message || "Something went wrong. Please try again."
+      );
     }
   },
 };

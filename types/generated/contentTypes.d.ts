@@ -430,32 +430,6 @@ export interface AdminUser extends Struct.CollectionTypeSchema {
   };
 }
 
-export interface ApiLoginLogin extends Struct.CollectionTypeSchema {
-  collectionName: 'logins';
-  info: {
-    displayName: 'Login';
-    pluralName: 'logins';
-    singularName: 'login';
-  };
-  options: {
-    draftAndPublish: true;
-  };
-  attributes: {
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    Email: Schema.Attribute.Email & Schema.Attribute.Required;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<'oneToMany', 'api::login.login'> &
-      Schema.Attribute.Private;
-    Password: Schema.Attribute.Password & Schema.Attribute.Required;
-    publishedAt: Schema.Attribute.DateTime;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-  };
-}
-
 export interface ApiRegisterRegister extends Struct.CollectionTypeSchema {
   collectionName: 'registers';
   info: {
@@ -471,6 +445,8 @@ export interface ApiRegisterRegister extends Struct.CollectionTypeSchema {
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     Email: Schema.Attribute.Email & Schema.Attribute.Required;
+    isLoginned: Schema.Attribute.Boolean & Schema.Attribute.Required;
+    lastLoginAt: Schema.Attribute.DateTime;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -490,6 +466,7 @@ export interface ApiRegisterRegister extends Struct.CollectionTypeSchema {
     OtpExpiryAt: Schema.Attribute.DateTime;
     Password: Schema.Attribute.Password & Schema.Attribute.Required;
     publishedAt: Schema.Attribute.DateTime;
+    refresh_token: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1008,7 +985,6 @@ declare module '@strapi/strapi' {
       'admin::transfer-token': AdminTransferToken;
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
-      'api::login.login': ApiLoginLogin;
       'api::register.register': ApiRegisterRegister;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;

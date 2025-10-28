@@ -36,10 +36,20 @@
         "notVerified"
       ]
     },
+    "isLoginned": {
+      "type": "boolean",
+      "required": true
+    },
+    "refresh_token": {
+      "type": "string"
+    },
     "Otp": {
       "type": "biginteger"
     },
     "OtpExpiryAt": {
+      "type": "datetime"
+    },
+    "lastLoginAt": {
       "type": "datetime"
     }
   }
