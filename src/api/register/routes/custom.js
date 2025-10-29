@@ -25,29 +25,40 @@ export default {
       config: { auth: false },
     },
     {
-      method : "POST",
-      path : "/register/otp-verify",
-      handler:"custom.verifyOtp",
-      config : {auth : false}
+      method: "POST",
+      path: "/register/otp-verify",
+      handler: "custom.verifyOtp",
+      config: { auth: false },
     },
     {
-      method : "POST",
-      path : "/register/resend-otp",
-      handler:"custom.resendOtp",
-      config : {auth : false}
+      method: "POST",
+      path: "/register/resend-otp",
+      handler: "custom.resendOtp",
+      config: { auth: false },
     },
     {
-        method : "POST",
-        path :"/login",
-        handler : "custom.login",
-        config : {auth : false}
+      method: "POST",
+      path: "/login",
+      handler: "custom.login",
+      config: { auth: false },
     },
     {
-      method : "POST",
-      path : "/logout",
-      handler : "custom.logout",
-      config : {auth:false}
-    }
-
+      method: "POST",
+      path: "/logout",
+      handler: "custom.logout",
+      config: { auth: false },
+    },
+    {
+      method: "POST",
+      path: "/forgot-password",
+      handler: "custom.forgotPassword",
+      config: { auth: false },
+    },
+    {
+      method: "POST",
+      path: "/reset-password",
+      handler:"custom.resetPassword",
+      config :{auth:false}
+    },
   ],
 };

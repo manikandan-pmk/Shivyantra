@@ -1,6 +1,9 @@
 import bcrypt from "bcryptjs";
 import { Resend } from "resend";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
+// @ts-ignore
+import { send } from "process";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -70,6 +73,7 @@ export default {
   },
   async verifyOtp(ctx) {
     try {
+      // @ts-ignore
       // @ts-ignore
       const { Email, Otp, OtpExpiryAt } = ctx.request.body;
       if (!Otp) {
@@ -228,6 +232,10 @@ export default {
         isLoginned,
         refresh_token,
         lastLoginAt,
+        forgotPasswordUrl,
+        // @ts-ignore
+        lastLogoutIn,
+        forgotPasswordUrlExpiryAt,
       } = ctx.request.body;
 
       if (!id) {
@@ -272,6 +280,15 @@ export default {
         // @ts-ignore
         updateData.lastLoginAt = lastLoginAt;
       }
+      // @ts-ignore
+      if (lastLogoutIn) updateData.lastLogoutIn = lastLogoutIn;
+
+      if (forgotPasswordUrl !== undefined)
+        // @ts-ignore
+        updateData.forgotPasswordUrl = forgotPasswordUrl;
+      if (forgotPasswordUrlExpiryAt !== undefined)
+        // @ts-ignore
+        updateData.forgotPasswordUrlExpiryAt = forgotPasswordUrlExpiryAt;
 
       const updatedUser = await strapi.db
         .query("api::register.register")
@@ -368,6 +385,7 @@ export default {
 
   async logout(ctx) {
     try {
+      // @ts-ignore
       const { id } = ctx.params;
       const { refresh_token } = ctx.request.body;
 
@@ -401,6 +419,151 @@ export default {
       });
     } catch (err) {
       return ctx.internalServerError(err.message || err);
+    }
+  },
+  async forgotPassword(ctx) {
+    try {
+      // @ts-ignore
+      const { id } = ctx.params;
+
+      const { Email } = ctx.request.body;
+
+      const user = await strapi.db.query("api::register.register").findOne({
+        where: { Email },
+      });
+
+      if (!user) {
+        return ctx.badRequest("User Not Found");
+      }
+
+      if (user.isLoginned && user.refresh_token) {
+        return ctx.badRequest(
+          "Cannot Sent link while logged in. Please log out first."
+        );
+      }
+
+      if (user.userVerify !== "verified") {
+        return ctx.badRequest("User not Verified , Please Verify Email");
+      }
+
+      const token = crypto.randomBytes(32).toString("hex");
+      const ExpiryAt = new Date(Date.now() + 5 * 60 * 1000);
+
+      const Url = `http://localhost:5173/forgot-password?email=${encodeURIComponent(Email)}&code=${token}`;
+
+      if (user.forgotPasswordUrl !== null) {
+        return ctx.badRequest(
+          "Reset Link ALready Sent , Please Try Again Later"
+        );
+      }
+
+      try {
+        await resend.emails.send({
+          from: "Shivyantra <onboarding@resend.dev>",
+          to: user.Email,
+          subject: "Your Link for Reset-Password",
+          html: `
+           <div style="font-family:sans-serif; padding:10px">
+            <h2>Hi ${user.Name},</h2>
+            <p>Click below to reset your password (link valid for 5 minutes):</p>
+            <a href="${Url}" style="color:#4CAF50;">${Url}</a>
+            <p>Thank you,<br/>Shivyantra Team</p>
+          </div>
+          `,
+        });
+      } catch (err) {
+        return ctx.badRequest(err.message || err);
+      }
+      const updateUser = await strapi.db
+        .query("api::register.register")
+        .update({
+          where: { id: user.id },
+          data: {
+            forgotPasswordUrl: Url,
+            forgotPasswordUrlExpiryAt: ExpiryAt,
+          },
+        });
+
+      return ctx.send({
+        success: true,
+        message: `Link Sent To Your ${user.Email}`,
+        data: updateUser,
+      });
+    } catch (err) {
+      return ctx.internalServerError(err.message || err);
+    }
+  },
+  async resetPassword(ctx) {
+    try {
+      const { Email, code, newPassword } = ctx.request.body;
+
+      if (!Email || !code || !newPassword) {
+        return ctx.badRequest("Email,Code,newPassword is Required");
+      }
+      const user = await strapi.db.query("api::register.register").findOne({
+        where: { Email },
+      });
+
+      if (!user) {
+        return ctx.badRequest("User Not Found");
+      }
+
+      if (user.isLoginned && user.refresh_token) {
+        return ctx.badRequest(
+          "Cannot reset password while logged in. Please log out first."
+        );
+      }
+
+      if (!user.forgotPasswordUrl || !user.forgotPasswordUrlExpiryAt) {
+        return ctx.badRequest("Reset token not found or expired.");
+      }
+
+      const expiry = new Date(user.forgotPasswordUrlExpiryAt);
+      const now = new Date();
+
+      if (now > expiry) {
+        return ctx.badRequest("Reset link has expired. Please request again.");
+      }
+
+      const storedUrl = user.forgotPasswordUrl;
+      const storedCode = new URL(storedUrl).searchParams.get("code");
+
+      if (storedCode !== code) {
+        return ctx.badRequest("invalid reset code");
+      }
+
+      const comparePassword = await bcrypt.compare(newPassword, user.Password);
+
+      if (comparePassword) {
+        return ctx.badRequest(
+          "You are Entering Same Password, Please try different Password"
+        );
+      }
+
+      const updatedpassword = await bcrypt.hash(newPassword, 10);
+
+      const updatedUser = await strapi.db
+        .query("api::register.register")
+        .update({
+          where: { id: user.id },
+          data: {
+            Password: updatedpassword,
+            forgotPasswordUrl: null,
+            forgotPasswordUrlExpiryAt: null,
+          },
+        });
+
+      return ctx.send({
+        success: true,
+        message: "Password has been reset successfully.",
+        data: {
+          id: updatedUser.id,
+          Email: updatedUser.Email,
+          updatedUser,
+        },
+      });
+    } catch (err) {
+      return ctx.badRequest(err.message || err);
     }
   },
 };

@@ -49,10 +49,16 @@
     "OtpExpiryAt": {
       "type": "datetime"
     },
+    "forgotPasswordUrl": {
+      "type": "string"
+    },
     "lastLoginAt": {
       "type": "datetime"
     },
     "lastLogoutIn": {
+      "type": "datetime"
+    },
+    "forgotPasswordUrlExpiryAt": {
       "type": "datetime"
     }
   }

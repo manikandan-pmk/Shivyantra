@@ -445,6 +445,8 @@ export interface ApiRegisterRegister extends Struct.CollectionTypeSchema {
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     Email: Schema.Attribute.Email & Schema.Attribute.Required;
+    forgotPasswordUrl: Schema.Attribute.String;
+    forgotPasswordUrlExpiryAt: Schema.Attribute.DateTime;
     isLoginned: Schema.Attribute.Boolean & Schema.Attribute.Required;
     lastLoginAt: Schema.Attribute.DateTime;
     lastLogoutIn: Schema.Attribute.DateTime;
