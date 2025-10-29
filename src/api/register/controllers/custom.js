@@ -2,8 +2,7 @@ import bcrypt from "bcryptjs";
 import { Resend } from "resend";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
-// @ts-ignore
-import { send } from "process";
+
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
