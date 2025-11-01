@@ -448,7 +448,7 @@ export default {
       const token = crypto.randomBytes(32).toString("hex");
       const ExpiryAt = new Date(Date.now() + 5 * 60 * 1000);
 
-      const Url = `http://localhost:5173/forgot-password?email=${encodeURIComponent(Email)}&code=${token}`;
+      const Url = `http://localhost:5173/reset-password?email=${encodeURIComponent(Email)}&code=${token}`;
 
       if (user.forgotPasswordUrl !== null) {
         return ctx.badRequest(
@@ -564,5 +564,6 @@ export default {
     } catch (err) {
       return ctx.badRequest(err.message || err);
     }
-  },
+  }, 
+
 };
