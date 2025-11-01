@@ -1,5 +1,4 @@
-module.exports = ({ env }) => ({
-  // Other plugins
+export default ({ env }) => ({
   upload: {
     config: {
       provider: 'cloudinary',
@@ -9,7 +8,12 @@ module.exports = ({ env }) => ({
         api_secret: env('CLOUDINARY_SECRET'),
       },
       actionOptions: {
-        upload: {},
+        upload: {
+          // ✅ Disable sharp optimization (no temp image processing)
+          options: {
+            optimize: false,
+          },
+        },
         delete: {},
       },
     },
