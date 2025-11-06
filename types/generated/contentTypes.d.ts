@@ -527,7 +527,8 @@ export interface ApiProductProduct extends Struct.CollectionTypeSchema {
     offer: Schema.Attribute.Integer;
     Price: Schema.Attribute.BigInteger;
     ProductImage: Schema.Attribute.Media<
-      'images' | 'files' | 'videos' | 'audios'
+      'images' | 'files' | 'videos' | 'audios',
+      true
     >;
     ProductName: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
