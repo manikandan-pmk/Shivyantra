@@ -60,6 +60,12 @@
     },
     "forgotPasswordUrlExpiryAt": {
       "type": "datetime"
+    },
+    "reviews": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::review.review",
+      "mappedBy": "register"
     }
   }
 }

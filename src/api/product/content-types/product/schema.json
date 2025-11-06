@@ -1,0 +1,78 @@
+{
+  "kind": "collectionType",
+  "collectionName": "products",
+  "info": {
+    "singularName": "product",
+    "pluralName": "products",
+    "displayName": "Product"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "ProductName": {
+      "type": "string"
+    },
+    "Price": {
+      "type": "biginteger"
+    },
+    "SubTitle": {
+      "type": "string"
+    },
+    "offer": {
+      "type": "integer"
+    },
+    "ProductImage": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ]
+    },
+    "SKU": {
+      "type": "string"
+    },
+    "Weight": {
+      "type": "decimal"
+    },
+    "Dimension": {
+      "type": "string"
+    },
+    "Material": {
+      "type": "enumeration",
+      "enum": [
+        "Silver",
+        "Brass",
+        "Gold"
+      ]
+    },
+    "AvailableQuantity": {
+      "type": "integer"
+    },
+    "Description": {
+      "type": "richtext"
+    },
+    "subcategories": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::subcategory.subcategory",
+      "inversedBy": "products"
+    },
+    "categories": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::category.category",
+      "mappedBy": "products"
+    },
+    "reviews": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::review.review",
+      "mappedBy": "product"
+    }
+  }
+}
