@@ -72,8 +72,7 @@ export default {
   },
   async verifyOtp(ctx) {
     try {
-      // @ts-ignore
-      // @ts-ignore
+  
       const { Email, Otp, OtpExpiryAt } = ctx.request.body;
       if (!Otp) {
         return ctx.badRequest("Field is Required");

@@ -66,6 +66,12 @@
       "relation": "oneToMany",
       "target": "api::review.review",
       "mappedBy": "register"
+    },
+    "carts": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::cart.cart",
+      "mappedBy": "register"
     }
   }
 }
