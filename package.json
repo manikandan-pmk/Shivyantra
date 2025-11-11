@@ -20,6 +20,7 @@
     "@strapi/provider-upload-cloudinary": "^5.30.0",
     "@strapi/strapi": "5.29.0",
     "bcryptjs": "^3.0.2",
+    "crypto": "^1.0.1",
     "jsonwebtoken": "^9.0.2",
     "pg": "8.8.0",
     "razorpay": "^2.9.6",
