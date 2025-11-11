@@ -72,6 +72,18 @@
       "relation": "oneToMany",
       "target": "api::cart.cart",
       "mappedBy": "register"
+    },
+    "addresses": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::address.address",
+      "mappedBy": "register"
+    },
+    "payments": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::payment.payment",
+      "mappedBy": "register"
     }
   }
 }

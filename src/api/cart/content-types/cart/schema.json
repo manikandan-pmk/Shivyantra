@@ -28,6 +28,12 @@
       "relation": "manyToOne",
       "target": "api::register.register",
       "inversedBy": "carts"
+    },
+    "payment": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::payment.payment",
+      "inversedBy": "cart"
     }
   }
 }

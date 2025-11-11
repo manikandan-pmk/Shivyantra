@@ -430,6 +430,49 @@ export interface AdminUser extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiAddressAddress extends Struct.CollectionTypeSchema {
+  collectionName: 'addresses';
+  info: {
+    displayName: 'Address';
+    pluralName: 'addresses';
+    singularName: 'address';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    Address_line_1: Schema.Attribute.String;
+    Address_line_2: Schema.Attribute.String;
+    City: Schema.Attribute.String;
+    Country: Schema.Attribute.String;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    Email: Schema.Attribute.Email;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::address.address'
+    > &
+      Schema.Attribute.Private;
+    MobileNumber: Schema.Attribute.BigInteger &
+      Schema.Attribute.SetMinMax<
+        {
+          max: '10';
+        },
+        string
+      >;
+    Name: Schema.Attribute.String;
+    Postal_code: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
+    register: Schema.Attribute.Relation<'manyToOne', 'api::register.register'>;
+    State: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiCartCart extends Struct.CollectionTypeSchema {
   collectionName: 'carts';
   info: {
@@ -447,6 +490,7 @@ export interface ApiCartCart extends Struct.CollectionTypeSchema {
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<'oneToMany', 'api::cart.cart'> &
       Schema.Attribute.Private;
+    payment: Schema.Attribute.Relation<'oneToOne', 'api::payment.payment'>;
     Price: Schema.Attribute.BigInteger;
     ProductImage: Schema.Attribute.String;
     ProductName: Schema.Attribute.String;
@@ -525,6 +569,45 @@ export interface ApiHomeSliderHomeSlider extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiPaymentPayment extends Struct.CollectionTypeSchema {
+  collectionName: 'payments';
+  info: {
+    displayName: 'Payment';
+    pluralName: 'payments';
+    singularName: 'payment';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    Amount: Schema.Attribute.BigInteger &
+      Schema.Attribute.SetMinMax<
+        {
+          min: '100';
+        },
+        string
+      >;
+    cart: Schema.Attribute.Relation<'oneToOne', 'api::cart.cart'>;
+    Condition: Schema.Attribute.Enumeration<['Created', 'Paid', 'Pending']>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::payment.payment'
+    > &
+      Schema.Attribute.Private;
+    order_id: Schema.Attribute.String;
+    payment_id: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
+    register: Schema.Attribute.Relation<'manyToOne', 'api::register.register'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiProductProduct extends Struct.CollectionTypeSchema {
   collectionName: 'products';
   info: {
@@ -586,6 +669,7 @@ export interface ApiRegisterRegister extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
+    addresses: Schema.Attribute.Relation<'oneToMany', 'api::address.address'>;
     carts: Schema.Attribute.Relation<'oneToMany', 'api::cart.cart'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -614,6 +698,7 @@ export interface ApiRegisterRegister extends Struct.CollectionTypeSchema {
     Otp: Schema.Attribute.BigInteger;
     OtpExpiryAt: Schema.Attribute.DateTime;
     Password: Schema.Attribute.Password & Schema.Attribute.Required;
+    payments: Schema.Attribute.Relation<'oneToMany', 'api::payment.payment'>;
     publishedAt: Schema.Attribute.DateTime;
     refresh_token: Schema.Attribute.String;
     reviews: Schema.Attribute.Relation<'oneToMany', 'api::review.review'>;
@@ -1206,9 +1291,11 @@ declare module '@strapi/strapi' {
       'admin::transfer-token': AdminTransferToken;
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
+      'api::address.address': ApiAddressAddress;
       'api::cart.cart': ApiCartCart;
       'api::category.category': ApiCategoryCategory;
       'api::home-slider.home-slider': ApiHomeSliderHomeSlider;
+      'api::payment.payment': ApiPaymentPayment;
       'api::product.product': ApiProductProduct;
       'api::register.register': ApiRegisterRegister;
       'api::review.review': ApiReviewReview;

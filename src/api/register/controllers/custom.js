@@ -1,3 +1,4 @@
+// @ts-nocheck
 import bcrypt from "bcryptjs";
 import { Resend } from "resend";
 import jwt from "jsonwebtoken";
